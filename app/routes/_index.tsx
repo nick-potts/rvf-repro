@@ -1,48 +1,54 @@
-import type { MetaFunction } from "@remix-run/node";
+import {withZod} from "@rvf/zod";
+import {z} from "zod";
+import {useForm} from "@rvf/remix";
+import {useFetcher} from "@remix-run/react";
+import {action} from "~/routes/other";
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: "New Remix App" },
-    { name: "description", content: "Welcome to Remix!" },
-  ];
-};
+export const proxyValidator = withZod(z.any());
 
 export default function Index() {
-  return (
-    <div className="font-sans p-4">
-      <h1 className="text-3xl">Welcome to Remix</h1>
-      <ul className="list-disc mt-4 pl-6 space-y-2">
-        <li>
-          <a
-            className="text-blue-700 underline visited:text-purple-900"
-            target="_blank"
-            href="https://remix.run/start/quickstart"
-            rel="noreferrer"
-          >
-            5m Quick Start
-          </a>
-        </li>
-        <li>
-          <a
-            className="text-blue-700 underline visited:text-purple-900"
-            target="_blank"
-            href="https://remix.run/start/tutorial"
-            rel="noreferrer"
-          >
-            30m Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            className="text-blue-700 underline visited:text-purple-900"
-            target="_blank"
-            href="https://remix.run/docs"
-            rel="noreferrer"
-          >
-            Remix Docs
-          </a>
-        </li>
-      </ul>
-    </div>
-  );
+    return (
+        <MyForm></MyForm>
+    );
+}
+
+
+const MyForm = () => {
+    const fetcher = useFetcher<typeof action>()
+
+    const data = {
+        name: "",
+        email: ""
+    }
+    const route = '/other?__route=asdfasd'
+
+
+    const form = useForm({
+        validator: proxyValidator,
+        defaultValues: data,
+        fetcher: fetcher,
+        action: route,
+        method: "POST",
+        submitSource: "dom", // only broken with 'dom'
+        encType: "application/json", // Toggle this off and it works fine
+    });
+
+    console.log(fetcher.json, fetcher.data)
+
+    return (
+        <form {...form.getFormProps()}>
+            <label>
+                Name
+                <input name="name"/>
+            </label>
+
+            <label>
+                Email
+                <input name="email"/>
+            </label>
+            {form.error('email') && <p>{form.error('email')}</p>}
+
+            <button type={'submit'}>Submit</button>
+        </form>
+    );
 }
